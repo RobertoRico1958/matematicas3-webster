@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escuela Webster - Proyecto de Matemáticas 3</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f4f4f4;
+        color: #222;
+    }
+    .contenedor {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .tarjeta {
+        background: white;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+    h1, h2, h3 {
+        text-align: center;
+        margin: 6px 0;
+    }
+    h1 { font-size: 28px; }
+    h2 { font-size: 22px; }
+    h3 { font-size: 19px; margin-top: 12px; }
+
+    .instruccion {
+        text-align: center;
+        margin: 18px 0;
+        font-size: 17px;
+    }
+    .ecuacion {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 8px 0 18px;
+    }
+    .fila {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    label {
+        font-weight: bold;
+        font-size: 17px;
+    }
+    input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px;
+        font-size: 22px;
+        border: 1px solid #999;
+        border-radius: 10px;
+        margin-top: 6px;
+        text-align: center;
+    }
+    .botones {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+    }
+    button {
+        padding: 16px 8px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: #e7e7e7;
+    }
+    button:active {
+        transform: scale(0.98);
+    }
+    .resultado {
+        padding: 16px;
+        background: #f7f7f7;
+        border: 1px solid #bbb;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        min-height: 34px;
+        line-height: 1.5;
+    }
+    .procedimiento {
+        white-space: pre-wrap;
+        background: #fafafa;
+        border: 1px solid #bbb;
+        border-radius: 10px;
+        padding: 16px;
+        min-height: 300px;
+        font-family: Consolas, monospace;
+        font-size: 16px;
+        line-height: 1.45;
+        margin-top: 10px;
+        overflow-wrap: anywhere;
+    }
+    .grafica-contenedor {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 12px;
+        text-align: center;
+    }
+    canvas {
+        border: 1px solid #bbb;
+        border-radius: 10px;
+        background: white;
+        max-width: 100%;
+        height: auto;
+    }
+    .acciones {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 16px;
+    }
+    .error {
+        background: #fff0f0;
+        border: 1px solid #c55;
+        color: #900;
+        padding: 12px;
+        border-radius: 10px;
+        display: none;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+    .nota {
+        text-align: center;
+        font-size: 14px;
+        margin-top: 8px;
+    }
+    @media (max-width: 700px) {
+        .fila, .botones, .acciones {
+            grid-template-columns: 1fr;
+        }
+        h1 { font-size: 24px; }
+        h2 { font-size: 20px; }
+        .ecuacion { font-size: 21px; }
+    }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <div class="tarjeta">
+        <h1>Escuela Webster</h1>
+        <h2>Proyecto de Matemáticas 3</h2>
+        <h3>Ecuaciones de Segundo Grado y Parábola</h3>
+
+        <div class="instruccion">
+            Captura los coeficientes de la ecuación cuadrática.
+        </div>
+
+        <div class="ecuacion">ax² + bx + c = 0</div>
+
+        <div id="error" class="error"></div>
+
+        <div class="fila">
+            <div>
+                <label>Coeficiente a</label>
+                <input id="a" inputmode="decimal" placeholder="Ejemplo: 1">
+            </div>
+            <div>
+                <label>Coeficiente b</label>
+                <input id="b" inputmode="decimal" placeholder="Ejemplo: -4">
+            </div>
+            <div>
+                <label>Coeficiente c</label>
+                <input id="c" inputmode="decimal" placeholder="Ejemplo: 3">
+            </div>
+        </div>
+
+        <div class="botones">
+            <button onclick="resolverTodo()">RESOLVER ECUACIÓN</button>
+            <button onclick="calcularVertice()">CALCULAR VÉRTICE</button>
+            <button onclick="dibujarDesdeEntradas()">GRAFICAR PARÁBOLA</button>
+        </div>
+
+        <div id="resultado" class="resultado">Aquí aparecerán los resultados.</div>
+
+        <h3>Procedimiento paso a paso</h3>
+        <div id="procedimiento" class="procedimiento"></div>
+
+        <h3>Gráfica de la parábola</h3>
+        <div class="grafica-contenedor">
+            <canvas id="grafica" width="760" height="480"></canvas>
+        </div>
+        <div class="nota">La gráfica marca el vértice, el eje de simetría y, cuando existen, las raíces reales.</div>
+
+        <div class="acciones">
+            <button onclick="cargarEjemplo()">CARGAR EJEMPLO</button>
+            <button onclick="limpiar()">LIMPIAR</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarError(mensaje) {
+    const caja = document.getElementById("error");
+    caja.textContent = mensaje;
+    caja.style.display = "block";
+}
+
+function ocultarError() {
+    document.getElementById("error").style.display = "none";
+}
+
+function leerCoeficientes() {
+    const a = Number(document.getElementById("a").value.replace(",", "."));
+    const b = Number(document.getElementById("b").value.replace(",", "."));
+    const c = Number(document.getElementById("c").value.replace(",", "."));
+
+    if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c)) {
+        throw new Error("Captura valores numéricos para a, b y c.");
+    }
+    if (a === 0) {
+        throw new Error("El coeficiente a no puede ser cero, porque la ecuación dejaría de ser cuadrática.");
+    }
+    return {a, b, c};
+}
+
+function fmt(x) {
+    if (Math.abs(x) < 1e-12) x = 0;
+    if (Number.isInteger(x)) return String(x);
+    return Number(x.toFixed(6)).toString();
+}
+
+function signoTermino(valor, letra) {
+    if (valor === 0) return "";
+    if (valor > 0) return ` + ${fmt(valor)}${letra}`;
+    return ` - ${fmt(Math.abs(valor))}${letra}`;
+}
+
+function ecuacionTexto(a, b, c) {
+    let txt = `${fmt(a)}x²`;
+    txt += signoTermino(b, "x");
+    if (c > 0) txt += ` + ${fmt(c)}`;
+    if (c < 0) txt += ` - ${fmt(Math.abs(c))}`;
+    return txt + " = 0";
+}
+
+function resolverTodo() {
+    ocultarError();
+    try {
+        const {a,b,c} = leerCoeficientes();
+        const delta = b*b - 4*a*c;
+        const xv = -b/(2*a);
+        const yv = a*xv*xv + b*xv + c;
+
+        let resultadoRaices = "";
+        let procedimientoRaices = "";
+
+        if (delta > 0) {
+            const x1 = (-b + Math.sqrt(delta))/(2*a);
+            const x2 = (-b - Math.sqrt(delta))/(2*a);
+            resultadoRaices = `x₁ = ${fmt(x1)}   |   x₂ = ${fmt(x2)}`;
+            procedimientoRaices =
+`4) Como Δ > 0, existen dos soluciones reales:
+
+   x₁ = (-b + √Δ)/(2a)
+      = (${fmt(-b)} + √${fmt(delta)})/${fmt(2*a)}
+      = ${fmt(x1)}
+
+   x₂ = (-b - √Δ)/(2a)
+      = (${fmt(-b)} - √${fmt(delta)})/${fmt(2*a)}
+      = ${fmt(x2)}`;
+        } else if (delta === 0) {
+            const x = -b/(2*a);
+            resultadoRaices = `x = ${fmt(x)} (raíz doble)`;
+            procedimientoRaices =
+`4) Como Δ = 0, existe una sola solución real doble:
+
+   x = -b/(2a)
+     = ${fmt(-b)}/${fmt(2*a)}
+     = ${fmt(x)}`;
+        } else {
+            const real = -b/(2*a);
+            const imag = Math.sqrt(-delta)/Math.abs(2*a);
+            resultadoRaices = `No hay raíces reales. Raíces complejas: ${fmt(real)} ± ${fmt(imag)}i`;
+            procedimientoRaices =
+`4) Como Δ < 0, la parábola no corta al eje x.
+
+   Las soluciones son complejas:
+   x = ${fmt(real)} ± ${fmt(imag)}i`;
+        }
+
+        const apertura = a > 0 ? "hacia arriba" : "hacia abajo";
+
+        document.getElementById("resultado").innerHTML =
+            `Ecuación: ${ecuacionTexto(a,b,c)}<br>` +
+            `Δ = ${fmt(delta)}<br>` +
+            `${resultadoRaices}<br>` +
+            `Vértice: (${fmt(xv)}, ${fmt(yv)})<br>` +
+            `Eje de simetría: x = ${fmt(xv)}<br>` +
+            `Apertura: ${apertura}`;
+
+        document.getElementById("procedimiento").textContent =
+`ECUACIÓN:
+${ecuacionTexto(a,b,c)}
+
+1) Identificamos los coeficientes:
+   a = ${fmt(a)}
+   b = ${fmt(b)}
+   c = ${fmt(c)}
+
+2) Calculamos el discriminante:
+   Δ = b² - 4ac
+   Δ = (${fmt(b)})² - 4(${fmt(a)})(${fmt(c)})
+   Δ = ${fmt(delta)}
+
+3) Interpretamos el discriminante:
+   ${delta > 0 ? "Δ > 0: hay dos raíces reales diferentes." :
+     delta === 0 ? "Δ = 0: hay una raíz real doble." :
+     "Δ < 0: no existen raíces reales."}
+
+${procedimientoRaices}
+
+5) Calculamos el vértice:
+   xᵥ = -b/(2a)
+      = ${fmt(-b)}/${fmt(2*a)}
+      = ${fmt(xv)}
+
+   yᵥ = a(xᵥ)² + b(xᵥ) + c
+      = ${fmt(a)}(${fmt(xv)})² + ${fmt(b)}(${fmt(xv)}) + ${fmt(c)}
+      = ${fmt(yv)}
+
+6) Vértice:
+   V = (${fmt(xv)}, ${fmt(yv)})
+
+7) Eje de simetría:
+   x = ${fmt(xv)}
+
+8) Como a = ${fmt(a)}, la parábola abre ${apertura}.`;
+
+        dibujar(a,b,c);
+    } catch (e) {
+        mostrarError(e.message);
+    }
+}
+
+function calcularVertice() {
+    ocultarError();
+    try {
+        const {a,b,c} = leerCoeficientes();
+        const xv = -b/(2*a);
+        const yv = a*xv*xv + b*xv + c;
+        const apertura = a > 0 ? "hacia arriba" : "hacia abajo";
+
+        document.getElementById("resultado").innerHTML =
+            `Vértice: (${fmt(xv)}, ${fmt(yv)})<br>` +
+            `Eje de simetría: x = ${fmt(xv)}<br>` +
+            `La parábola abre ${apertura}.`;
+
+        document.getElementById("procedimiento").textContent =
+`ECUACIÓN:
+${ecuacionTexto(a,b,c)}
+
+1) Fórmula para la coordenada x del vértice:
+   xᵥ = -b/(2a)
+
+2) Sustituimos:
+   xᵥ = ${fmt(-b)}/${fmt(2*a)}
+      = ${fmt(xv)}
+
+3) Sustituimos xᵥ en y = ax² + bx + c:
+
+   yᵥ = ${fmt(a)}(${fmt(xv)})² + ${fmt(b)}(${fmt(xv)}) + ${fmt(c)}
+      = ${fmt(yv)}
+
+4) Por lo tanto:
+
+   V = (${fmt(xv)}, ${fmt(yv)})
+
+5) Eje de simetría:
+
+   x = ${fmt(xv)}
+
+6) Como a = ${fmt(a)}, la parábola abre ${apertura}.`;
+
+        dibujar(a,b,c);
+    } catch (e) {
+        mostrarError(e.message);
+    }
+}
+
+function dibujarDesdeEntradas() {
+    ocultarError();
+    try {
+        const {a,b,c} = leerCoeficientes();
+        dibujar(a,b,c);
+        document.getElementById("resultado").textContent =
+            `Gráfica de y = ${ecuacionTexto(a,b,c).replace(" = 0","")}`;
+    } catch (e) {
+        mostrarError(e.message);
+    }
+}
+
+function dibujar(a,b,c) {
+    const canvas = document.getElementById("grafica");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0,0,W,H);
+
+    const xv = -b/(2*a);
+    const yv = a*xv*xv + b*xv + c;
+    const delta = b*b - 4*a*c;
+
+    let raices = [];
+    if (delta >= 0) {
+        const r = Math.sqrt(delta);
+        raices = [(-b+r)/(2*a), (-b-r)/(2*a)];
+    }
+
+    let xMin = xv - 6;
+    let xMax = xv + 6;
+    if (raices.length) {
+        xMin = Math.min(xMin, ...raices) - 2;
+        xMax = Math.max(xMax, ...raices) + 2;
+    }
+    if (xMax - xMin < 10) {
+        xMin = xv - 5;
+        xMax = xv + 5;
+    }
+
+    let ys = [];
+    for (let i=0; i<=400; i++) {
+        const x = xMin + (xMax-xMin)*i/400;
+        ys.push(a*x*x+b*x+c);
+    }
+    let yMin = Math.min(...ys, 0);
+    let yMax = Math.max(...ys, 0);
+
+    if (yMax - yMin < 10) {
+        const centro = (yMax+yMin)/2;
+        yMin = centro - 5;
+        yMax = centro + 5;
+    } else {
+        const margen = 0.12*(yMax-yMin);
+        yMin -= margen;
+        yMax += margen;
+    }
+
+    function X(x) {
+        return (x-xMin)/(xMax-xMin)*W;
+    }
+    function Y(y) {
+        return H - (y-yMin)/(yMax-yMin)*H;
+    }
+
+    // Cuadrícula
+    ctx.strokeStyle = "#e0e0e0";
+    ctx.lineWidth = 1;
+    const pasoX = Math.max(1, Math.ceil((xMax-xMin)/12));
+    const pasoY = Math.max(1, Math.ceil((yMax-yMin)/10));
+
+    for (let x=Math.ceil(xMin/pasoX)*pasoX; x<=xMax; x+=pasoX) {
+        ctx.beginPath();
+        ctx.moveTo(X(x),0);
+        ctx.lineTo(X(x),H);
+        ctx.stroke();
+    }
+    for (let y=Math.ceil(yMin/pasoY)*pasoY; y<=yMax; y+=pasoY) {
+        ctx.beginPath();
+        ctx.moveTo(0,Y(y));
+        ctx.lineTo(W,Y(y));
+        ctx.stroke();
+    }
+
+    // Ejes
+    ctx.strokeStyle = "#555";
+    ctx.lineWidth = 1.5;
+    if (0 >= xMin && 0 <= xMax) {
+        ctx.beginPath();
+        ctx.moveTo(X(0),0);
+        ctx.lineTo(X(0),H);
+        ctx.stroke();
+    }
+    if (0 >= yMin && 0 <= yMax) {
+        ctx.beginPath();
+        ctx.moveTo(0,Y(0));
+        ctx.lineTo(W,Y(0));
+        ctx.stroke();
+    }
+
+    // Eje de simetría
+    ctx.setLineDash([6,5]);
+    ctx.strokeStyle = "#888";
+    ctx.beginPath();
+    ctx.moveTo(X(xv),0);
+    ctx.lineTo(X(xv),H);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Parábola
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i=0; i<=700; i++) {
+        const x = xMin + (xMax-xMin)*i/700;
+        const y = a*x*x+b*x+c;
+        const px = X(x);
+        const py = Y(y);
+        if (i===0) ctx.moveTo(px,py);
+        else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // Vértice
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(X(xv),Y(yv),6,0,2*Math.PI);
+    ctx.fill();
+    ctx.font = "11px Arial";
+    ctx.fillText(`V(${fmt(xv)}, ${fmt(yv)})`, X(xv)+8, Y(yv)-8);
+
+    // Raíces reales
+    if (delta >= 0) {
+        const únicas = [...new Set(raices.map(r => Number(r.toFixed(10))))];
+        únicas.forEach(r => {
+            ctx.beginPath();
+            ctx.arc(X(r),Y(0),5,0,2*Math.PI);
+            ctx.fill();
+            ctx.fillText(`x=${fmt(r)}`, X(r)+7, Y(0)-7);
+        });
+    }
+
+    // Etiquetas ejes
+    ctx.fillStyle = "#333";
+    ctx.font = "11px Arial";
+    ctx.fillText("x", W-18, Y(0)-6 < 15 ? 18 : Y(0)-6);
+    ctx.fillText("y", X(0)+7 < 10 ? 10 : X(0)+7, 18);
+}
+
+function cargarEjemplo() {
+    document.getElementById("a").value = "1";
+    document.getElementById("b").value = "-4";
+    document.getElementById("c").value = "3";
+    document.getElementById("resultado").textContent =
+        "Ejemplo cargado: x² - 4x + 3 = 0. Selecciona una opción.";
+    document.getElementById("procedimiento").textContent = "";
+    ocultarError();
+    dibujar(1,-4,3);
+}
+
+function limpiar() {
+    document.getElementById("a").value = "";
+    document.getElementById("b").value = "";
+    document.getElementById("c").value = "";
+    document.getElementById("resultado").textContent =
+        "Aquí aparecerán los resultados.";
+    document.getElementById("procedimiento").textContent = "";
+    document.getElementById("error").style.display = "none";
+
+    const canvas = document.getElementById("grafica");
+    canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById("a").focus();
+}
+</script>
+</body>
+</html>
